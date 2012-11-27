@@ -2,8 +2,6 @@ MongoDBクエリ解説
 =====
 
 「第1回　使ってみようMongoDB」で紹介したように，MongoDBは"RDBライクな検索クエリ"を実行可能です。
-今回は，MongoDBで使用するクエリを，慣れ親しんだSQLクエリと比較しながら学んでみましょう。
-
 
 ### RDBとの用語の違い
 
@@ -30,43 +28,180 @@ MongoDBでは，一意な"_id"フィールドが自動的に作成されます�
 MongoDBではドキュメントごとに独自のフィールドを有することができる点です。
 
 
-### MongoDBにおけるクエリとは
+### MySQLと比較したクエリ
 
-RDBでSQLクエリを使ってデータを取得するように，
-MongoDBでは，JavaScriptと，"BSONドキュメント"と呼ばれるJSONに似たクエリ記述オブジェクトを使ってデータを取得します。 
-例えば，データベースのusersコレクションに入っているすべてのドキュメントを取得したいとき，
-以下のようなクエリを発行します。
+"第1回　使ってみようMongoDB"でも解説したように，
+MongoDBでは，JavaScriptとJSON形式のハッシュデータを使ってデータを操作します。  
+ここでは，MongoDBで使用するクエリを，慣れ親しんだMySQLのクエリと比較しながら学んでみましょう。  
+まずは，データベース管理コマンドから見ていきます。
 
-    db.users.find({})
+#### データベース管理コマンド
+* データベースを参照する // mysql> show databases
+<pre>
+> show dbs
+</pre>
 
-このクエリでは，現在のデータベースオブジェクトdbに含まれるusersコレクションオブジェクトのfindメソッドを，
-引数なしで呼び出しています。この部分は，JavaScriptで記述しています。  
-次に，last_nameフィールドが"Smith"と一致するドキュメントを取得してみます。
-findメソッドの引数に，{[フィールド名]: [検索文字列]}を追加します。この部分は，BSONドキュメントで記述しています。
-すると，SQLにおけるWHERE句のように，検索結果を絞り込むことができます。
+* データベースを選択/作成する // mysql> use {db_name}; create database {db_name}  
+MongoDBのデータベースは、選択してコレクションへ最初のドキュメントをinsertしたタイミングで作成されます。
+<pre>
+> use {db_name}
+</pre>
 
-    db.users.find({'last_name': 'Smith'})
+* データベースを削除する // mysql> drop database {db_name}
+<pre>
+//useコマンドでデータベースを選択しておく    
+> db.dropDatabase()
+</pre>
 
-さらに，last_nameフィールドが"Smith"と一致するドキュメントの，ssnフィールドだけを取得してみましょう。
-findメソッドの引数に，{[フィールド名]: 1}を追加します。
-すると，SQLにおけるSELECT句のように，取得するフィールドを指定することができます。
+## COLLECTION
+* コレクションを参照/作成する // mysql> show tables; create table {table_name}(...)
+<pre>
+> show dbs  
+> use {db_name}  
+> show collections  //コレクションが何も表示されなかったら適当にinsertする  
+> db.marunouchi.insert({"created_at":new Date()})  //現在時刻をinsert  
+> show collections //marunouchiが見えますか
+</pre>
 
-    db.users.find({last_name: 'Smith'}, {'ssn': 1});
+* コレクションを削除する // mysql> drop table {table_name}
+<pre>
+> show dbs  
+> use {db_name}  
+> show collections  
+> db.marunouchi.drop()  //コレクション全部を削除します  
+> show collections //確認、marunouchiは削除された  
+</pre>
 
-逆に，すべてのドキュメントからthumbnailフィールドを除いた結果を取得するには，以下のようにします。
+* コレクション内のデータを削除する // mysql> truncate table {table_name}
+<pre>
+> db.marunouchi.insert({"created_at":new Date()})  
+> show collections  
+> db.marunouchi.remove() //コレクションの中のすべてのオブジェクトを削除します  
+> show collections //確認、marunouchiはまだある  
+</pre>
 
-    db.users.find({}, {thumbnail:0});
+* descコマンドはありません // mysql> desc {table_name}
 
-{[フィールド名]: 0}とすることで，取得しないフィールドを指定できます。  
-このように，MongoDBではJavaScriptでメソッドを呼び出し，BSONドキュメントをその引数に指定することで，
-SQLのように様々な処理を行うことができます。  
-余談ですが，メソッドに"()"をつけずにクエリを実行した場合，そのメソッドの内部実装を見ることができます。
-これは，MongoシェルがJavaScriptでできているためです。
+## DOCUMENT
+### INSERT
+* mysql> insert into {table_name} values(...)
+<pre>
+> use {db_name}
+> db.marunouchi.insert({"created_at":new Date()})
+> db["marunouchi"].insert({"created_at":new Date()}) //こんな書き方もできます 
+> for(var i=1; i<=20; i++) db.marunouchi.insert({"stock":i}) //for文も使えます
+</pre>
 
 
-### MongoDBを触ってみよう
+#### ちょっと脱線 
+* ハッシュであるdbのキー一覧を表示してみる
+<pre>
+> for(var k in db) print(k)
+> //versionというキーあり、呼んでみる
+> db.version
+> db.version()
+</pre>
 
 
+### SELECT
+* mysql> select count(*) from marunouchi
+<pre>
+> db.marunouchi.count()
+</pre>
+
+* mysql> select * from marunouchi
+<pre>
+> db.marunouchi.find()
+</pre>
+
+* has more と表示されたら
+<pre>
+> it //iterator
+</pre>
+
+* find()で20件以上表示させたい
+<pre>
+> DBQuery.shellBatchSize = 300  
+もしくは  
+> db.marunouchi.find().toArray()  
+> db.marunouchi.find().toArray().forEach(printjsononeline)  
+</pre>
+
+
+* とりあえず1件表示 // mysql> select * from marunouchi limit 1
+<pre>
+> db.marunouchi.findOne()
+</pre>
+
+* mysql> select * from marunouchi limit 5
+<pre>
+> db.marunouchi.find().limit(5)
+</pre>
+
+* mysql> select _id from marunouchi
+<pre>
+> db.marunouchi.find({},{"_id":1})  
+> db.marunouchi.find({},{"created_at":1}) //_id フィールドは常に表示される  
+> db.marunouchi.find({},{"_id":0,"created_at":1}) //0で非表示に  
+</pre>
+
+* mysql> select _id from where stock = 10
+<pre>
+> db.marunouchi.find({"stock":10}, {"_id":1})  
+</pre>
+
+* mysql> select _id from where stock {>, <, >=, <=} 10
+<pre>
+> db.marunouchi.find({ "stock": { $gt:  10 } }, { "_id": 1 })
+> db.marunouchi.find({ "stock": { $lt:  10 } }, { "_id": 1 })
+> db.marunouchi.find({ "stock": { $gte: 10 } }, { "_id": 1 })
+> db.marunouchi.find({ "stock": { $lte: 10 } }, { "_id": 1 })
+</pre>
+
+* JSON形式で表示
+<pre>
+> db.marunouchi.find().forEach(printjson)  
+> db.marunouchi.find().forEach(printjsononeline)  
+</pre>
+
+* toArray
+<pre>
+> db.marunouchi.find().toArray()
+</pre>
+
+### UPDATE
+* mysql> update marunouchi set version = 7 where name = 'debian'
+<pre>
+> db.marunouchi.update({"name":"debian"},{$set:{"version":7}}) //$setがないと他のフィールドが消えてしまうので注意
+</pre>
+
+* _idが存在すればupdate、存在しなければinsert
+<pre>
+> db.marunouchi.save({"_id":ObjectId("xxxx"),"version":7})
+</pre>
+
+### DELETE
+* mysql> delete from marunouchi where name = 'centos'
+<pre>
+> db.marunouchi.remove({"name":"centos"})
+</pre>
+
+## INDEX
+* INDEX参照
+<pre>
+> db.system.indexes.find()
+</pre>
+
+* INDEX作成
+<pre>
+> db.marunouchi.ensureIndex({"stock":1})
+</pre>
+
+* INDEX削除
+<pre>
+> db.marunouchi.dropIndex({"stock":1})  
+> db.marunouchi.dropIndexes() //全て削除  
+</pre>
 
 
 

@@ -82,7 +82,7 @@ MongoDBのコレクションは，MySQLのテーブルに該当します。
 コレクションを作成する
 * MySQL
 <pre>
-> create table [テーブル名]([スキーマ定義]);
+> create table [テーブル名] ([スキーマ定義]);
 </pre>
 * MongoDB
 <pre>

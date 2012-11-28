@@ -46,17 +46,17 @@ MongoDBでは，JavaScriptとJSON形式のハッシュデータを使ってデ�
 データベースを選択する
 * MySQL
 <pre>
-> use {db_name};
+> use [データベース名]
 </pre>
 * MongoDB
 <pre>
-> use {db_name}
+> use [データベース名]
 </pre>
 
 データベースを作成する
 * MySQL
 <pre>
-create database {db_name}
+create database [データベース名]
 </pre>
 * MongoDB
 <pre>
@@ -68,105 +68,170 @@ insertしたタイミングで作成されます。
 データベースを削除する
 * MySQL
 <pre>
-> drop database {db_name}
+> drop database [データベース名]
 </pre>
 * MongoDB
-  useコマンドでデータベースを選択しておく   
-<pre> 
+<pre>
 > db.dropDatabase()
 </pre>
+MongoDBでは，useコマンドでデータベースを選択しておく必要があります。
 
 ### コレクション操作
-* コレクションを参照/作成する // mysql> show tables; create table {table_name}(...)
+MongoDBのコレクションは，MySQLのテーブルに該当します。
+
+コレクションを作成する
+* MySQL
 <pre>
-> show dbs  
-> use {db_name}  
-> show collections  //コレクションが何も表示されなかったら適当にinsertする  
-> db.marunouchi.insert({"created_at":new Date()})  //現在時刻をinsert  
-> show collections //marunouchiが見えますか
+> create table [テーブル名]([スキーマ定義]);
+</pre>
+* MongoDB
+<pre>
+不要
+</pre>
+MongoDBのコレクションは，コレクションへ最初のドキュメントをinsertしたタイミングで作成されます。  
+明示的にコレクションを作成したい場合，以下のようにすることもできます。
+もちろん，MySQLと違ってスキーマ定義は行いません。
+* MongoDB
+<pre>
+db.createCollection("[コレクション名]")
 </pre>
 
-* コレクションを削除する // mysql> drop table {table_name}
+コレクションを参照する
+* MySQL
 <pre>
-> show dbs  
-> use {db_name}  
-> show collections  
-> db.marunouchi.drop()  //コレクション全部を削除します  
-> show collections //確認、marunouchiは削除された  
+> show tables;
+</pre>
+* MongoDB
+<pre>
+> show collections
 </pre>
 
-* コレクション内のデータを削除する // mysql> truncate table {table_name}
+コレクションを削除する
+* MySQL
 <pre>
-> db.marunouchi.insert({"created_at":new Date()})  
-> show collections  
-> db.marunouchi.remove() //コレクションの中のすべてのオブジェクトを削除します  
-> show collections //確認、marunouchiはまだある  
+> drop table [テーブル名];
+</pre>
+* MongoDB
+<pre>
+> db.[コレクション名].drop()
 </pre>
 
-* descコマンドはありません // mysql> desc {table_name}
+コレクション内のデータを全て削除する
+* MySQL
+<pre>
+> truncate table [テーブル名];
+</pre>
+* MongoDB
+<pre>
+> db.[コレクション名].remove()
+</pre>
+
 
 ### ドキュメント操作
+MongoDBのドキュメントは，MySQLのレコードに該当します。
+
 #### INSERT
-* mysql> insert into {table_name} values(...)
+* MySQL
 <pre>
-> use {db_name}
-> db.marunouchi.insert({"created_at":new Date()})
-> db["marunouchi"].insert({"created_at":new Date()}) //こんな書き方もできます 
-> for(var i=1; i<=20; i++) db.marunouchi.insert({"stock":i}) //for文も使えます
+> insert into [テーブル名] values([レコードの内容]);
 </pre>
-
-
-##### ちょっと脱線 
-* ハッシュであるdbのキー一覧を表示してみる
+* MongoDB
 <pre>
-> for(var k in db) print(k)
-> //versionというキーあり、呼んでみる
-> db.version
-> db.version()
+> db.[コレクション名].insert([ドキュメントの内容])
 </pre>
-
+MongoDBでは，JavaScriptをクエリに使用します。
+したがって，以下のようにfor文を使ってドキュメントをinsertすることも可能です。
+* MongoDB - JavaScriptを使用した例
+<pre>
+> for(var i=1; i<=20; i++) db.testcoll.insert({"stock":i})
+</pre>
 
 #### SELECT
-* mysql> select count(*) from marunouchi
+まずは，コレクションの中の，全ドキュメントの全フィールドを取得してみます。
+MySQLでいうと，テーブルの中の，全レコードの全カラムを取得することと同じです。
+* MySQL
 <pre>
-> db.marunouchi.count()
+> select * from [テーブル名];
+</pre>
+* MongoDB
+<pre>
+> db.[コレクション名].find()
+</pre>
+MongoDBでは，クエリを実行した結果，標準で20件以上のドキュメントが返された場合，
+19件目を表示した次の行に"has more"と表示されます。
+続きのドキュメントを表示したい場合は，以下のようにします。
+* MongoDB
+<pre>
+> it
+</pre>
+itは"イテレータ"を意味するコマンドで，次の19件を表示することができます。  
+一度に全てのドキュメントを表示したい場合は，以下のようにします。
+* MongoDB
+<pre>
+> db.marunouchi.find().toArray()
+または
+> db.marunouchi.find().toArray().forEach(printjsononeline) 
+</pre>
+なお，一度に表示できるドキュメントの数を変更したい場合は，次のようにします。
+* MongoDB
+<pre>
+> DBQuery.shellBatchSize = [一度に表示したいドキュメント数]
 </pre>
 
-* mysql> select * from marunouchi
+件数を指定して取得するには，以下のようにします。  
+まずは，1件だけ表示したい場合です。
+* MySQL
 <pre>
-> db.marunouchi.find()
+> select * from [テーブル名] limit 1;
+</pre>
+* MongoDB
+<pre>
+> db.[コレクション名].findOne()
+</pre>
+次に，n件表示したい場合です。
+* MySQL
+<pre>
+> select * from [テーブル名] limit [n];
+</pre>
+* MongoDB
+<pre>
+> db.[コレクション名].limit([n])
 </pre>
 
-* has more と表示されたら
+次に，コレクションの中のドキュメント数をカウントしてみます。
+* MySQL
 <pre>
-> it //iterator
+> select count(*) from [テーブル名];
+</pre>
+* MongoDB
+<pre>
+> db.[コレクション名].count()
 </pre>
 
-* find()で20件以上表示させたい
+今度は，取得するフィールドを指定してみましょう。
+コレクションの中の，全ドキュメントの特定のフィールドだけを表示してみます。
+* MySQL
 <pre>
-> DBQuery.shellBatchSize = 300  
-もしくは  
-> db.marunouchi.find().toArray()  
-> db.marunouchi.find().toArray().forEach(printjsononeline)  
+> select [カラム名1],[カラム名2],...,[カラム名n] from [テーブル名];
+</pre>
+* MongoDB
+<pre>
+> db.[コレクション名].find({},{"[フィールド名1]":1,"[フィールド名2]":1,...,"[フィールド名n]":1})
+</pre>
+この場合，_idフィールドは常に表示されます。
+_idフィールドを含め，特定のフィールドを非表示にしたい場合は，以下のようにします。
+* MongoDB
+<pre>
+> db.[コレクション名].find({},{"[フィールド名1]":0,"[フィールド名2]":0,...,"[フィールド名n]":0})
+</pre>
+これらの表示／非表示は，クエリに混在させることができます。
+* MongoDB - フィールドの表示／非表示が混在した例
+<pre>
+> db.testcoll.find({},{"_id":0,"key1":1,"key2":0})
 </pre>
 
-
-* とりあえず1件表示 // mysql> select * from marunouchi limit 1
-<pre>
-> db.marunouchi.findOne()
-</pre>
-
-* mysql> select * from marunouchi limit 5
-<pre>
-> db.marunouchi.find().limit(5)
-</pre>
-
-* mysql> select _id from marunouchi
-<pre>
-> db.marunouchi.find({},{"_id":1})  
-> db.marunouchi.find({},{"created_at":1}) //_id フィールドは常に表示される  
-> db.marunouchi.find({},{"_id":0,"created_at":1}) //0で非表示に  
-</pre>
+ここまで書いた
+--------
 
 * mysql> select _id from where stock = 10
 <pre>
@@ -228,5 +293,14 @@ insertしたタイミングで作成されます。
 
 
 
+descコマンドはありません // mysql> desc {table_name}
 
 
+##### ちょっと脱線 
+* ハッシュであるdbのキー一覧を表示してみる
+<pre>
+> for(var k in db) print(k)
+> //versionというキーあり、呼んでみる
+> db.version
+> db.version()
+</pre>

@@ -62,11 +62,10 @@ create database {db_name}
 <pre>
 なし
 </pre>
-MongoDBのデータベースは、選択してコレクションへ最初のドキュメントをinsertしたタイミングで作成されます。
+MongoDBのデータベースは，データベースを選択し，コレクションへ最初のドキュメントを
+insertしたタイミングで作成されます。
 
-
-
-* データベースを削除する // mysql> drop database {db_name}
+データベースを削除する // mysql> drop database {db_name}
 <pre>
 //useコマンドでデータベースを選択しておく    
 > db.dropDatabase()

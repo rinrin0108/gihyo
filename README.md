@@ -65,9 +65,14 @@ create database {db_name}
 MongoDBのデータベースは，データベースを選択し，コレクションへ最初のドキュメントを
 insertしたタイミングで作成されます。
 
-データベースを削除する // mysql> drop database {db_name}
+データベースを削除する
+* MySQL
 <pre>
-//useコマンドでデータベースを選択しておく    
+> drop database {db_name}
+</pre>
+* MongoDB
+  useコマンドでデータベースを選択しておく   
+<pre> 
 > db.dropDatabase()
 </pre>
 

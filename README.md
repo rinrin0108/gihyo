@@ -8,14 +8,14 @@ MongoDBクエリ解説
 
 MongoDBのクエリを解説する前に，まずはRDBとの用語の違いを明確にしておきます。
 
-RDBでの呼称               |  MongoDBでの呼称
---------------------------|---------
-"データベース"            | "データベース"
-"テーブル"                | "コレクション"
-"行" "レコード"           | "ドキュメント"
-"列" "カラム"             | "フィールド"
-"インデックス"            | "インデックス"
-"プライマリキー"          |  "プライマリキー"
+RDBでの呼称         |  MongoDBでの呼称
+--------------------|---------
+database            | database
+table               | collection
+raw(レコード)       | document
+column              | field
+index               | index
+primary key         | _id field
 
 ここで重要なことは，呼称は異なるものの，RDBにおける概念がほぼそのままMongoDBにも適用できるということです。
 すなわち，RDBにおいて，データベースが複数のテーブルを持ち，テーブルが複数のレコードを持ち，
@@ -33,15 +33,12 @@ MongoDBでは，JavaScriptとJSON形式のハッシュデータを使ってデ�
 ここでは，MongoDBで使用するクエリを，慣れ親しんだMySQLのクエリと比較しながら学んでみましょう。  
 
 ### データベース操作
-データベースを参照する
-* MySQL
-<pre>
-> show databases
-</pre>
-* MongoDB
-<pre>
-> show dbs
-</pre>
+
+MySQL           | MongoDB
+----------------|----------------
+show databases; | show dbs
+
+
 
 データベースを選択する
 * MySQL
